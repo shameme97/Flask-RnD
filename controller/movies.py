@@ -1,11 +1,15 @@
 from flask import Flask, request
+from flask_redis import FlaskRedis
 import sys
 
 sys.path.append("..") 
 import services.dynamodb_handler as dynamodb
-
+import services.redis_handler as redis
 
 app = Flask(__name__)
+redis_client = redis.FlaskRedis(app)
+
+
 
 @app.route('/')
 def root_route():
@@ -117,6 +121,17 @@ def RateMovie(id):
         'msg'      : 'Some error occured',
         'response' : response
     }
+
+
+@app.route('/redis/add')
+def add():
+    key = 'item1'
+    value = 'value1'
+    return redis_client.__setitem__(key, value)
+
+@app.route('/redis/<string:key>')
+def get(key):
+    return redis_client.__getitem__(key)
 
 
 if __name__ == '__main__':
