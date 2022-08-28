@@ -1,0 +1,65 @@
+version: "3"
+
+services:
+  flask-rnd-localstack:
+    image: localstack/localstack:0.12.9
+    container_name: flask-rnd-localstack
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+      - "${PORT_WEB_UI-8010}:${PORT_WEB_UI-8080}"
+    environment:
+      - SERVICES=${SERVICES- }
+      - DEBUG=${DEBUG- }
+      - DATA_DIR=/tmp/localstack/data
+      - PORT_WEB_UI=8010
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEFAULT_REGION=ap-southeast-1
+    volumes:
+      - my-datavolume:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
+
+
+  flask-rnd-dynamodb-admin:
+    depends_on:
+      - flask-rnd-localstack
+    image: aaronshaf/dynamodb-admin
+    container_name: flask-rnd-dynamodb-admin
+    ports:
+      - 8020:8001
+    environment:
+      - DYNAMO_ENDPOINT=http://flask-rnd-localstack:4566
+    networks:
+      - backend
+
+  flask-rnd-redis:
+    image: redis
+    container_name: flask-rnd-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - my-datavolume:/data
+    networks:
+      - backend
+
+  flask-rnd-redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    depends_on:
+      - flask-rnd-redis
+    image: rediscommander/redis-commander:latest
+    #    restart: always
+    environment:
+      - REDIS_HOSTS=local:mapp-redis:6379
+    ports:
+      - "8030:8081"
+    networks:
+      - backend
+
+volumes:
+  my-datavolume:
+
+networks:
+  backend:
