@@ -1,13 +1,18 @@
-from flask import Flask, request
+from fileinput import filename
+from re import template
+from flask import Flask, request, render_template, redirect, send_file, url_for
 from flask_redis import FlaskRedis
 import sys
 
 sys.path.append("..") 
 import services.dynamodb_handler as dynamodb
 import services.redis_handler as redis
+import services.s3_handler as s3
 
-app = Flask(__name__)
+
+app = Flask(__name__, template_folder='../templates')
 redis_client = redis.FlaskRedis(app)
+UPLOAD_FOLDER = "uploads"
 
 
 
@@ -122,7 +127,32 @@ def RateMovie(id):
         'response' : response
     }
 
-#  TESTING REDIS
+# S3
+@app.route("/storage")
+def storage():
+    contents = s3.list_files(s3.BUCKET)
+    return render_template('storage.html', contents=contents)
+
+
+@app.route("/upload", methods=['POST'])
+def upload():
+    if request.method == "POST":
+        f = request.files['file']
+        f.save(f.filename)
+        s3.upload_file(f"{f.filename}", s3.BUCKET)
+        return redirect("/storage")
+
+
+@app.route("/download/<filename>", methods=['GET'])
+def download(filename):
+    if request.method == 'GET':
+        output = s3.download_file(filename, s3.BUCKET)
+
+        return send_file(output, as_attachment=True)
+
+
+
+#  REDIS
 @app.route('/redis/add')
 def add():
     key = 'item1'
