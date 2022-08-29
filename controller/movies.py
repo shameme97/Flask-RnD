@@ -122,7 +122,7 @@ def RateMovie(id):
         'response' : response
     }
 
-
+#  TESTING REDIS
 @app.route('/redis/add')
 def add():
     key = 'item1'
