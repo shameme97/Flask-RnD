@@ -1,4 +1,5 @@
 from fileinput import filename
+import random, string
 from re import template
 from flask import Flask, request, render_template, redirect, send_file, url_for
 from flask_redis import FlaskRedis
@@ -28,8 +29,8 @@ def addAMovie():
 
     data = request.get_json()
     # id, title, director = 1001, 'Angels and Demons', 'Dan Brown'
-
-    response = dynamodb.addItemToMovie(data['id'], data['title'], data['director'])    
+    id = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    response = dynamodb.addItemToMovie(id, data['title'], data['director'], data['rating'])    
     
     if (response['ResponseMetadata']['HTTPStatusCode'] == 200):
         return {
@@ -131,6 +132,7 @@ def RateMovie(id):
 @app.route("/storage")
 def storage():
     contents = s3.list_files(s3.BUCKET)
+    print(contents)
     return render_template('storage.html', contents=contents)
 
 
@@ -138,7 +140,6 @@ def storage():
 def upload():
     if request.method == "POST":
         f = request.files['file']
-        f.save(f.filename)
         s3.upload_file(f"{f.filename}", s3.BUCKET)
         return redirect("/storage")
 

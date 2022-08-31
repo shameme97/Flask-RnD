@@ -10,7 +10,7 @@ def CreateATableMovie():
             AttributeDefinitions = [ # Name and type of the attributes
                 {
                     'AttributeName': 'id', # Name of the attribute
-                    'AttributeType': 'N'   # N -> Number (S -> String, B-> Binary)
+                    'AttributeType': 'S'   # N -> Number (S -> String, B-> Binary)
                 }
             ],
             TableName = 'Movie', # Name of the table
@@ -36,13 +36,13 @@ def CreateATableMovie():
 
 MovieTable = resource.Table('Movie')
 
-def addItemToMovie(id, title, author):
+def addItemToMovie(id, title, director, rating=0.0):
     response = MovieTable.put_item(
         Item = {
             'id'     : id,
             'title'  : title,
-            'director' : author,
-            'rating'  : 0
+            'director' : director,
+            'rating'  : rating
         }
     )
     return response
